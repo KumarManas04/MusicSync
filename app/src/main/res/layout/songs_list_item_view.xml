@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@drawable/round_button"
+    android:layout_margin="2dp"
+    android:paddingEnd="5dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/item_song_art_image"
+        android:layout_alignParentStart="true"
+        android:layout_margin="10dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"/>
+
+    <TextView
+        android:id="@+id/item_song_text_view"
+        android:layout_toEndOf="@id/item_song_art_image"
+        android:singleLine="true"
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="#eeeeee"/>
+
+    <TextView
+        android:id="@+id/item_artist_text_view"
+        android:layout_below="@id/item_song_text_view"
+        android:layout_toEndOf="@id/item_song_art_image"
+        android:singleLine="true"
+        android:layout_marginTop="1dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:textColor="#bdbdbd"/>
+
+</RelativeLayout>
