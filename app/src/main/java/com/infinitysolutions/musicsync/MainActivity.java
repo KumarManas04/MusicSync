@@ -385,18 +385,19 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private void createPlaylistDatabase(final String playlistName, final String tableName) throws InterruptedException {
+    private void createPlaylistDatabase(final String playlistName, final String tableName) {
 
-        @SuppressLint("HandlerLeak") final Handler h = new Handler(){
+        final Handler h = new Handler(new Handler.Callback() {
             @Override
-            public void handleMessage(Message msg){
-                if(msg.what == 0){
+            public boolean handleMessage(Message msg) {
+                if (msg.what == 0) {
                     Log.d("HelloWorld", "Refreshing...");
                     PlaylistViewFragment playlistViewFragment = (PlaylistViewFragment) getSupportFragmentManager().findFragmentByTag("playlistFragment");
                     playlistViewFragment.refreshPlaylists();
                 }
+                return true;
             }
-        };
+        });
 
         final Thread thread = new Thread() {
             @Override
@@ -501,11 +502,8 @@ public class MainActivity extends AppCompatActivity
                     tableNameBuilder.append("_").append(w);
                 }
                 String tableName = tableNameBuilder.toString();
-                try {
-                    createPlaylistDatabase(playListName, tableName);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+
+                createPlaylistDatabase(playListName, tableName);
                 createPlaylistDialog.dismiss();
             }
         });

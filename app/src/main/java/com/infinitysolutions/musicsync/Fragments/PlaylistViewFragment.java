@@ -1,11 +1,13 @@
 package com.infinitysolutions.musicsync.Fragments;
 
 
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -15,14 +17,18 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.infinitysolutions.musicsync.AdapterAsyncLoader;
 import com.infinitysolutions.musicsync.Adapters.PlaylistsAdapter;
+import com.infinitysolutions.musicsync.Databases.Playlists.Playlist;
+import com.infinitysolutions.musicsync.Databases.Playlists.PlaylistDao;
+import com.infinitysolutions.musicsync.Databases.Playlists.PlaylistDatabase;
 import com.infinitysolutions.musicsync.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class PlaylistViewFragment extends Fragment
         implements
-        LoaderManager.LoaderCallbacks<PlaylistsAdapter>,
         PlaylistsAdapter.OnPlaylistClickListener{
 
     private RecyclerView mPlaylistRecyclerView;
@@ -55,13 +61,13 @@ public class PlaylistViewFragment extends Fragment
         Log.d("HelloWorld","Reached onCreateView");
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mContext);
         mPlaylistRecyclerView.setLayoutManager(layoutManager);
-        getActivity().getSupportLoaderManager().restartLoader(0,null,this).forceLoad();
+        loadPlaylists();
         return rootView;
     }
 
     public void refreshPlaylists(){
         Log.d("HelloWorld","Reached refreshPlaylists");
-        getActivity().getSupportLoaderManager().restartLoader(0,null,this).forceLoad();
+        loadPlaylists();
     }
 
     @Override
@@ -75,29 +81,40 @@ public class PlaylistViewFragment extends Fragment
         }
     }
 
-    @NonNull
-    @Override
-    public android.support.v4.content.Loader<PlaylistsAdapter> onCreateLoader(int id, Bundle args) {
-        Log.d("HelloWorld","Reached onCreateLoader");
-        return new AdapterAsyncLoader(mContext);
-    }
+    private void loadPlaylists(){
+        final List<Playlist> playlists = new ArrayList<Playlist>();
 
-    @Override
-    public void onLoadFinished(@NonNull android.support.v4.content.Loader<PlaylistsAdapter> loader, PlaylistsAdapter playlistsAdapter) {
-        playlistsAdapter.setOnItemClickListener(this);
-        if(playlistsAdapter.getItemCount() == 0){
-            mPlaylistRecyclerView.setVisibility(View.GONE);
-            recyclerEmptyTextView.setVisibility(View.VISIBLE);
-        }else{
-            mPlaylistRecyclerView.setVisibility(View.VISIBLE);
-            recyclerEmptyTextView.setVisibility(View.GONE);
-        }
-        mPlaylistRecyclerView.setAdapter(playlistsAdapter);
-    }
+        final Handler handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                if(msg.what == 0){
+                    PlaylistsAdapter playlistsAdapter = new PlaylistsAdapter(playlists);
+                    playlistsAdapter.setOnItemClickListener(PlaylistViewFragment.this);
+                    if(playlistsAdapter.getItemCount() == 0){
+                        mPlaylistRecyclerView.setVisibility(View.GONE);
+                        recyclerEmptyTextView.setVisibility(View.VISIBLE);
+                    }else{
+                        mPlaylistRecyclerView.setVisibility(View.VISIBLE);
+                        recyclerEmptyTextView.setVisibility(View.GONE);
+                    }
+                    mPlaylistRecyclerView.setAdapter(playlistsAdapter);
+                }
+                return true;
+            }
+        });
 
-    @Override
-    public void onLoaderReset(@NonNull android.support.v4.content.Loader<PlaylistsAdapter> loader) {
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                PlaylistDatabase pDb = Room.databaseBuilder(mContext, PlaylistDatabase.class, "Playlists").build();
+                PlaylistDao playlistDao = pDb.playlistDao();
+                playlists.clear();
+                playlists.addAll(playlistDao.getAll());
+                handler.sendEmptyMessage(0);
+            }
+        };
 
+        thread.start();
     }
 
     @Override

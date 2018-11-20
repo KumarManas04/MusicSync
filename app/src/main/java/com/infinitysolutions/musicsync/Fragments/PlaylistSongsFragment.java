@@ -18,8 +18,7 @@ import com.infinitysolutions.musicsync.R;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PlaylistSongsFragment extends Fragment implements LoaderManager.LoaderCallbacks<SongsListAdapter> {
-
+public class PlaylistSongsFragment extends Fragment {
 
     public PlaylistSongsFragment() {
         // Required empty public constructor
@@ -30,21 +29,5 @@ public class PlaylistSongsFragment extends Fragment implements LoaderManager.Loa
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_playlist_songs, container, false);
-    }
-
-    @NonNull
-    @Override
-    public Loader<SongsListAdapter> onCreateLoader(int id, @Nullable Bundle args) {
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<SongsListAdapter> loader, SongsListAdapter data) {
-
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<SongsListAdapter> loader) {
-
     }
 }
