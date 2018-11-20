@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,7 +12,7 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:foreground="@drawable/player_background_gradient"
-        android:src="@drawable/cover" />
+        app:srcCompat="@drawable/cover" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,7 +34,7 @@
                 android:background="@drawable/round_image_view_background"
                 android:elevation="20dp"
                 android:scaleType="centerCrop"
-                android:src="@drawable/cover" />
+                app:srcCompat="@drawable/cover" />
 
             <SeekBar
                 android:id="@+id/seek_bar"
@@ -125,7 +126,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/previous_track"
+                    app:srcCompat="@drawable/previous_track"
                     android:onClick="previousTrack"/>
 
                 <ImageButton
@@ -137,7 +138,7 @@
                     android:background="@drawable/button_background"
                     android:onClick="playPause"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/play" />
+                    app:srcCompat="@drawable/play" />
 
                 <ImageButton
                     android:layout_width="0dp"
@@ -146,7 +147,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/button_background"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/next_track"
+                    app:srcCompat="@drawable/next_track"
                     android:onClick="nextTrack"/>
 
             </LinearLayout>
@@ -164,7 +165,7 @@
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/playlist_add" />
+                    app:srcCompat="@drawable/playlist_add" />
 
                 <ImageButton
                     android:id="@+id/shuffle_button"
@@ -175,7 +176,7 @@
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/shuffle"
+                    app:srcCompat="@drawable/shuffle"
                     android:onClick="shuffle"/>
 
                 <ImageButton
@@ -187,7 +188,7 @@
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/repeat_all"
+                    app:srcCompat="@drawable/repeat_all"
                     android:onClick="repeat" />
 
                 <ImageButton
@@ -198,7 +199,7 @@
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/more_options" />
+                    app:srcCompat="@drawable/more_options" />
 
             </LinearLayout>
 

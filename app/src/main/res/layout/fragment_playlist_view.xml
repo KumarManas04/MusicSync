@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,7 +8,7 @@
     android:background="#0e1219"
     tools:context=".Fragments.PlaylistViewFragment">
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/playlist_songs_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -38,7 +39,7 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:src="@drawable/add_playlist"
+            app:srcCompat="@drawable/add_playlist"
             android:layout_gravity="start"
             android:layout_width="40dp"
             android:layout_height="40dp" />

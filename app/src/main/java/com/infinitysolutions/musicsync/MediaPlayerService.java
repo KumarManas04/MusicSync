@@ -23,9 +23,9 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.media.session.MediaButtonReceiver;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -402,7 +402,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setCustomBigContentView(expandedView)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOnlyAlertOnce(true)
-                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle())
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle())
                 .setAutoCancel(false)
                 .setSound(null)
                 .setOngoing(isOngoing);
