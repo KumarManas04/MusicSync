@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0e1219"
+    tools:context=".Fragments.PlaylistViewFragment">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/playlist_songs_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#0e1219"
+        android:scrollbarThumbVertical="@drawable/scrollbars"
+        android:scrollbars="vertical" />
+
+    <TextView
+        android:id="@+id/recycler_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        android:gravity="center"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="20sp"
+        android:text="No playlists found"
+        android:textColor="#ffffff"/>
+
+    <LinearLayout
+        android:id="@+id/create_playlist_button"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:layout_margin="5dp"
+        android:background="#34383f"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:src="@drawable/add_playlist"
+            android:layout_gravity="start"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:ellipsize="end"
+            android:paddingStart="10dp"
+            android:text="Create new playlist"
+            android:textSize="22sp"
+            android:textColor="#ffffff"
+            android:fontFamily="sans-serif-condensed"/>
+
+    </LinearLayout>
+
+</LinearLayout>

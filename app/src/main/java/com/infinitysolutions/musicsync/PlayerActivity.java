@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -134,8 +135,13 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(this,MainActivity.class);
-        startActivity(intent);
+//        Intent intent = new Intent(this,MainActivity.class);
+//        startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     private void stopServiceAndDisconnect() {

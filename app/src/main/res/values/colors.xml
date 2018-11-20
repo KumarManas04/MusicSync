@@ -6,4 +6,5 @@
     <color name="colorWhite">#ffffff</color>
     <color name="colorSeekBarProgress">#bf360c</color>
     <color name="snackbar_action_color">#ffffff</color>
+    <color name="nav_bar_color">#0e1219</color>
 </resources>

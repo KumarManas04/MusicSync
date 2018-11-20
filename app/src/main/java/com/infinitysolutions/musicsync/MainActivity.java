@@ -1,8 +1,11 @@
 package com.infinitysolutions.musicsync;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentUris;
@@ -14,31 +17,53 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.infinitysolutions.musicsync.Databases.PlaylistSongs.PlaylistSongsDao;
+import com.infinitysolutions.musicsync.Databases.PlaylistSongs.PlaylistSongsDatabase;
+import com.infinitysolutions.musicsync.Databases.Playlists.Playlist;
+import com.infinitysolutions.musicsync.Databases.Playlists.PlaylistDao;
+import com.infinitysolutions.musicsync.Databases.Playlists.PlaylistDatabase;
+import com.infinitysolutions.musicsync.Fragments.PlaylistViewFragment;
+import com.infinitysolutions.musicsync.Fragments.SongsListFragment;
 import com.infinitysolutions.musicsync.MediaPlayerService.MediaPlayerBinder;
 
+import java.io.IOException;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.infinitysolutions.musicsync.Contract.ValuesContract.RS_HANDLE_PERM;
 import static com.infinitysolutions.musicsync.Contract.ValuesContract.SHARED_PREF_ALBUM_ID;
@@ -48,7 +73,10 @@ import static com.infinitysolutions.musicsync.Contract.ValuesContract.SHARED_PRE
 import static com.infinitysolutions.musicsync.Contract.ValuesContract.SHARED_PREF_URI_DATA;
 import static com.infinitysolutions.musicsync.Contract.ValuesContract.SNACKBAR_STORAGE_PERMISSION_REQUEST_MESSAGE;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements
+        SongsListFragment.OnFragmentInteractionListener,
+        PlaylistViewFragment.OnFragmentInteractionListener {
 
     private MediaPlayerService mediaPlayerService;
     private Intent playerIntent;
@@ -210,6 +238,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void showPlaylists(View view) {
+        PlaylistViewFragment playlistViewFragment = PlaylistViewFragment.newInstance();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, playlistViewFragment, "playlistFragment").commit();
+
+    }
+
+    public void showAllSongs(View view) {
+        loadSongsList();
+    }
+
     public void openPlayer(View view) {
         Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
         intent.putExtra("title", mSongName);
@@ -257,8 +297,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (cursor != null) {
             cursor.moveToFirst();
-            SongsListAdapter songsListAdapter = new SongsListAdapter(this, cursor);
-            songsListRecyclerView.setAdapter(songsListAdapter);
 
             songName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
             artistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
@@ -277,6 +315,11 @@ public class MainActivity extends AppCompatActivity {
         playerIntent.putExtra("artist", mArtistName);
         playerIntent.putExtra("uriData", mUriData);
         playerIntent.putExtra("albumId", mAlbumId);
+
+        SongsListFragment songsListFragment = SongsListFragment.newInstance();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, songsListFragment, "songsListFragment").commit();
 
         setPlayerDetails(mSongName, mArtistName, mAlbumId);
     }
@@ -342,6 +385,43 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private void createPlaylistDatabase(final String playlistName, final String tableName) throws InterruptedException {
+
+        @SuppressLint("HandlerLeak") final Handler h = new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+                if(msg.what == 0){
+                    Log.d("HelloWorld", "Refreshing...");
+                    PlaylistViewFragment playlistViewFragment = (PlaylistViewFragment) getSupportFragmentManager().findFragmentByTag("playlistFragment");
+                    playlistViewFragment.refreshPlaylists();
+                }
+            }
+        };
+
+        final Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    PlaylistDatabase playlistDatabase = Room.databaseBuilder(getApplicationContext(), PlaylistDatabase.class, "Playlists").build();
+                    PlaylistDao playlistDao = playlistDatabase.playlistDao();
+
+                    if (playlistDao.findByName(tableName) == null) {
+                        Playlist playlist = new Playlist();
+                        playlist.setPlaylistName(playlistName);
+                        playlist.setTableName(tableName);
+                        playlist.setSongsCount(0);
+                        playlistDao.insertAll(playlist);
+                    }
+                    playlistDatabase.close();
+                    h.sendEmptyMessage(0);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+    }
+
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -388,4 +468,47 @@ public class MainActivity extends AppCompatActivity {
             ready = false;
         }
     };
+
+    @Override
+    public void playSong(long albumId, String songName, String artistName, String uriData) {
+        setSongAndPlay(albumId, songName, artistName, uriData);
+    }
+
+    @Override
+    public void openPlaylist(String tableName) {
+
+    }
+
+    @Override
+    public void createPlaylist() {
+        final Dialog createPlaylistDialog = new Dialog(this);
+        createPlaylistDialog.setContentView(R.layout.create_playlist_dialog);
+        createPlaylistDialog.setTitle("Create playlist");
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int width = metrics.widthPixels;
+        createPlaylistDialog.getWindow().setLayout((6 * width) / 7, WindowManager.LayoutParams.WRAP_CONTENT);
+
+        Button createButton = (Button) createPlaylistDialog.findViewById(R.id.create_playlist_button);
+        final EditText playlistEditText = (EditText) createPlaylistDialog.findViewById(R.id.playlist_name);
+
+        createButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String playListName = playlistEditText.getText().toString();
+                String words[] = playListName.toLowerCase().split("\\s+");
+                StringBuilder tableNameBuilder = new StringBuilder("table");
+                for (String w : words) {
+                    tableNameBuilder.append("_").append(w);
+                }
+                String tableName = tableNameBuilder.toString();
+                try {
+                    createPlaylistDatabase(playListName, tableName);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                createPlaylistDialog.dismiss();
+            }
+        });
+        createPlaylistDialog.show();
+    }
 }

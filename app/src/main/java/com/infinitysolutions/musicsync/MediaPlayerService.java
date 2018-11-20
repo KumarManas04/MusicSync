@@ -1,10 +1,12 @@
 package com.infinitysolutions.musicsync;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -28,6 +30,9 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.NotificationTarget;
 
 import java.util.Random;
 
@@ -192,7 +197,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             playPauseIcon = R.drawable.play;
             isOngoing = false;
         }
-        startForeground(111, createNotification(playPauseIcon, isOngoing).build());
+        startForeground(111, createNotification(playPauseIcon, isOngoing));
     }
 
     public boolean isMediaPlaying() {
@@ -204,37 +209,37 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     public void nextTrack() {
-        if(mShuffleMode == 1){
-            if(playedSongsCount < songsCount){
+        if (mShuffleMode == 1) {
+            if (playedSongsCount < songsCount) {
                 int randomNo = 0;
                 playedSongsCount++;
                 do {
                     Random rand = new Random();
                     randomNo = rand.nextInt(songsCount);
-                }while((int)mShuffleArray[randomNo] != 0);
+                } while ((int) mShuffleArray[randomNo] != 0);
                 mShuffleArray[randomNo] = 'u';
 
                 mCursor.moveToPosition(randomNo);
                 skipTrack();
-            }else{
+            } else {
                 playedSongsCount = 1;
                 Random rand = new Random();
                 int randomNo = 0;
 
                 //Checking that last played song is not selected again
-                do{
+                do {
                     randomNo = rand.nextInt(songsCount);
-                }while(randomNo == mCursor.getPosition());
+                } while (randomNo == mCursor.getPosition());
 
                 //Resetting the playlist
-                for(int i = 0; i < songsCount; i++){
+                for (int i = 0; i < songsCount; i++) {
                     mShuffleArray[i] = Character.MIN_VALUE;
                 }
                 mShuffleArray[randomNo] = 'u';
                 mCursor.moveToPosition(randomNo);
                 skipTrack();
             }
-        }else {
+        } else {
             if (mCursor.getPosition() < mCursor.getCount() - 1) {
                 mCursor.moveToNext();
             } else {
@@ -276,7 +281,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
         startForegroundMediaService();
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.notify(111, createNotification(R.drawable.pause, true).build());
+        notificationManager.notify(111, createNotification(R.drawable.pause, true));
     }
 
     public void pauseMusic() {
@@ -291,7 +296,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
         stopForeground(false);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.notify(111, createNotification(R.drawable.play, false).build());
+        notificationManager.notify(111, createNotification(R.drawable.play, false));
     }
 
     public void playPauseMusic() {
@@ -331,7 +336,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mMediaPlayer.setOnCompletionListener(this);
     }
 
-    private NotificationCompat.Builder createNotification(int playPauseIcon, boolean isOngoing) {
+    private Notification createNotification(int playPauseIcon, boolean isOngoing) {
         String CHANNEL_ID = "music";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Music Sync";
@@ -339,6 +344,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
+            channel.setSound(null, null);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
@@ -396,10 +402,43 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setCustomBigContentView(expandedView)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOnlyAlertOnce(true)
-                .setStyle(new NotificationCompat.BigTextStyle())
+                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle())
                 .setAutoCancel(false)
+                .setSound(null)
                 .setOngoing(isOngoing);
-        return notificationBuilder;
+
+        Notification notification = notificationBuilder.build();
+
+        NotificationTarget notificationTargetExpanded = new NotificationTarget(
+                this,
+                R.id.nl_song_art_image_view,
+                expandedView,
+                notification,
+                111);
+
+        NotificationTarget notificationTargetCompact = new NotificationTarget(
+                this,
+                R.id.nc_song_art_image_view,
+                compactView,
+                notification,
+                111);
+
+        Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+        Uri albumArtUri = ContentUris.withAppendedId(sArtworkUri, mAlbumId);
+
+        Glide
+                .with(getApplicationContext())
+                .asBitmap()
+                .load(albumArtUri)
+                .into(notificationTargetExpanded);
+
+        Glide
+                .with(getApplicationContext())
+                .asBitmap()
+                .load(albumArtUri)
+                .into(notificationTargetCompact);
+
+        return notification;
     }
 
     private void initMediaSession() {
@@ -449,10 +488,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             return (currPos * 200) / duration;
         }
         return 0;
-    }
-
-    public int getAudioSessionId() {
-        return mMediaPlayer.getAudioSessionId();
     }
 
     public void seekToPosition(int pos) {
@@ -506,26 +541,26 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             skipTrack();
         } else if (mRepeatMode == 0) {
 
-            if(mShuffleMode == 1){
-                if(playedSongsCount < songsCount){
+            if (mShuffleMode == 1) {
+                if (playedSongsCount < songsCount) {
                     int randomNo = 0;
                     playedSongsCount++;
                     do {
                         Random rand = new Random();
                         randomNo = rand.nextInt(songsCount);
-                        Log.d("HeyBud","random no. = " + randomNo);
-                    }while((int)mShuffleArray[randomNo] != 0);
+                        Log.d("HeyBud", "random no. = " + randomNo);
+                    } while ((int) mShuffleArray[randomNo] != 0);
                     mShuffleArray[randomNo] = 'u';
 
                     mCursor.moveToPosition(randomNo);
                     skipTrack();
-                }else{
+                } else {
                     playedSongsCount = 0;
-                    for(int i = 0; i < songsCount; i++){
+                    for (int i = 0; i < songsCount; i++) {
                         mShuffleArray[i] = Character.MIN_VALUE;
                     }
                 }
-            }else {
+            } else {
                 if (mCursor.getPosition() < mCursor.getCount() - 1) {
                     mCursor.moveToNext();
                     skipTrack();
